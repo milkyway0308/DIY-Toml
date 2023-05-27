@@ -1,4 +1,4 @@
 dependencies {
-    implementation("io.arrow-kt:arrow-core:${rootProject.properties["arrow_version"]}")
+    implementation(libs.arrow)
     implementation(project(":api"))
 }

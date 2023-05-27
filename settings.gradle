@@ -1,5 +1,11 @@
 rootProject.name = 'DIY-Toml'
 
+dependencyResolutionManagement {
+    versionCatalogs {
+        libs { from files("libs.versions.toml") }
+    }
+}
+
 setupAllModuleFrom(file("modules"))
 
 def setupAllModuleFrom(File directory) {

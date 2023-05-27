@@ -1,0 +1,2 @@
+[libraries]
+arrow = { group = "io.arrow-kt", name = "arrow-core", version = "1.2.0-RC" }
