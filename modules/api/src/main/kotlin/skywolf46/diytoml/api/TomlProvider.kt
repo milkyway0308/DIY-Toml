@@ -9,9 +9,5 @@ interface TomlProvider {
 
     fun createReader(spec: TomlSpec): TomlReader
 
-    fun <FROM : Any, TO : Any> registerGlobalEncoder(from: KClass<FROM>, encoder: Converter<FROM, TO>)
-
-    fun <FROM : Any, TO : Any> registerGlobalDecoder(
-        from: KClass<TO>, encoder: Converter<FROM, TO>
-    )
+    fun getConverterContainer() : ConverterContainer
 }
