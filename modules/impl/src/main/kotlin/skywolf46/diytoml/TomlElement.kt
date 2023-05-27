@@ -30,6 +30,16 @@ sealed interface TomlElement<ORIGIN : Any> {
         }
     }
 
+    data class Int(private val origin: kotlin.Int) : TomlElement<kotlin.Int> {
+        override fun asKotlinObject(): kotlin.Int {
+            return origin
+        }
+
+        override fun toString(): kotlin.String {
+            return origin.toString()
+        }
+    }
+
     data class Float(private val origin: kotlin.Float) : TomlElement<kotlin.Float> {
         override fun asKotlinObject(): kotlin.Float {
             return origin
@@ -99,7 +109,7 @@ sealed interface TomlElement<ORIGIN : Any> {
             return origin.contentEquals(other.origin)
         }
 
-        override fun hashCode(): Int {
+        override fun hashCode(): kotlin.Int {
             return origin.contentHashCode()
         }
     }
