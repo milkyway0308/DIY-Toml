@@ -10,7 +10,7 @@ sealed interface TomlElement<ORIGIN : Any> {
 
     override fun toString(): kotlin.String
 
-    sealed class Boolean(private val origin: kotlin.Boolean) : TomlElement<kotlin.Boolean> {
+    data class Boolean(private val origin: kotlin.Boolean) : TomlElement<kotlin.Boolean> {
         override fun asKotlinObject(): kotlin.Boolean {
             return origin
         }
@@ -20,7 +20,7 @@ sealed interface TomlElement<ORIGIN : Any> {
         }
     }
 
-    sealed class String(private val origin: kotlin.String) : TomlElement<kotlin.String> {
+    data class String(private val origin: kotlin.String) : TomlElement<kotlin.String> {
         override fun asKotlinObject(): kotlin.String {
             return origin
         }
@@ -30,7 +30,7 @@ sealed interface TomlElement<ORIGIN : Any> {
         }
     }
 
-    sealed class Float(private val origin: kotlin.Float) : TomlElement<kotlin.Float> {
+    data class Float(private val origin: kotlin.Float) : TomlElement<kotlin.Float> {
         override fun asKotlinObject(): kotlin.Float {
             return origin
         }
@@ -40,7 +40,7 @@ sealed interface TomlElement<ORIGIN : Any> {
         }
     }
 
-    sealed class DateTime(private val localDateTime: LocalDateTime) : TomlElement<LocalDateTime> {
+    data class DateTime(private val localDateTime: LocalDateTime) : TomlElement<LocalDateTime> {
         override fun asKotlinObject(): LocalDateTime {
             return localDateTime
         }
@@ -51,7 +51,7 @@ sealed interface TomlElement<ORIGIN : Any> {
     }
 
 
-    sealed class ZonedDateTime(private val origin: java.time.ZonedDateTime) : TomlElement<java.time.ZonedDateTime> {
+    data class ZonedDateTime(private val origin: java.time.ZonedDateTime) : TomlElement<java.time.ZonedDateTime> {
         override fun asKotlinObject(): java.time.ZonedDateTime {
             return origin
         }
@@ -61,7 +61,7 @@ sealed interface TomlElement<ORIGIN : Any> {
         }
     }
 
-    sealed class Time(private val origin: LocalTime) : TomlElement<LocalTime> {
+    data class Time(private val origin: LocalTime) : TomlElement<LocalTime> {
         override fun asKotlinObject(): LocalTime {
             return origin
         }
@@ -71,7 +71,7 @@ sealed interface TomlElement<ORIGIN : Any> {
         }
     }
 
-    sealed class Date(private val origin: LocalDate) : TomlElement<LocalDate> {
+    data class Date(private val origin: LocalDate) : TomlElement<LocalDate> {
         override fun asKotlinObject(): LocalDate {
             return origin
         }
@@ -81,7 +81,7 @@ sealed interface TomlElement<ORIGIN : Any> {
         }
     }
 
-    sealed class Array<T : TomlElement<*>>(private val origin: kotlin.Array<T>) : TomlElement<kotlin.Array<T>> {
+    data class Array<T : TomlElement<*>>(private val origin: kotlin.Array<T>) : TomlElement<kotlin.Array<T>> {
         override fun asKotlinObject(): kotlin.Array<T> {
             return origin
         }
@@ -89,9 +89,22 @@ sealed interface TomlElement<ORIGIN : Any> {
         override fun toString(): kotlin.String {
             return "[${origin.joinToString(", ") { it.toString() }}]"
         }
+
+        override fun equals(other: Any?): kotlin.Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Array<*>
+
+            return origin.contentEquals(other.origin)
+        }
+
+        override fun hashCode(): Int {
+            return origin.contentHashCode()
+        }
     }
 
-    sealed class Table<T : TomlElement<*>>(private val origin: Map<kotlin.String, T>) :
+    data class Table<T : TomlElement<*>>(private val origin: Map<kotlin.String, T>) :
         TomlElement<Map<kotlin.String, T>> {
         override fun asKotlinObject(): Map<kotlin.String, T> {
             return origin
