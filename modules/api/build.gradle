@@ -1,0 +1,3 @@
+dependencies {
+    api("io.arrow-kt:arrow-core:${rootProject.properties["arrow_version"]}")
+}
