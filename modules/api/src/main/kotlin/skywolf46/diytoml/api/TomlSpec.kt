@@ -1,3 +1,9 @@
 package skywolf46.diytoml.api
 
-data class TomlSpec(val allowNullValue: Boolean = false, val allowRecursiveConversion: Boolean)
+import kotlin.reflect.KClass
+
+data class TomlSpec(
+    val allowNullValue: Boolean = false,
+    val allowRecursiveConversion: Boolean,
+    val customConverter: Map<KClass<*>, Converter<*, *>>
+)
