@@ -4,7 +4,6 @@
 
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'org.jetbrains.kotlin.jvm' version '1.8.21' apply false
 }
 
@@ -40,12 +39,8 @@ build {
 
 jar {
     archiveBaseName.set("DIY-Toml-all")
-    finalizedBy shadowJar
 }
 
-shadowJar {
-    archiveBaseName.set("DIY-Toml-all")
-}
 
 // =========================================================
 //                Subproject Predefines
@@ -53,7 +48,6 @@ shadowJar {
 
 subprojects {
     apply plugin: 'java'
-    apply plugin: 'com.github.johnrengelman.shadow'
     apply plugin: 'org.jetbrains.kotlin.jvm'
 
     repositories {
@@ -65,11 +59,6 @@ subprojects {
     }
 
     jar {
-        archiveBaseName.set("DIY-Toml-${project.name}")
-        finalizedBy shadowJar
-    }
-
-    shadowJar {
         archiveBaseName.set("DIY-Toml-${project.name}")
     }
 }
