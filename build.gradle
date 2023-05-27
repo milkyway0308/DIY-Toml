@@ -1,0 +1,74 @@
+// =========================================================
+//                         Plugins
+// =========================================================
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'org.jetbrains.kotlin.jvm' version '1.8.21' apply false
+}
+
+// =========================================================
+//                      Project Setup
+// =========================================================
+group = "skywolf46"
+version = rootProject.properties["version"]
+
+// =========================================================
+//                Dependency / Repositories
+// =========================================================
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    subprojects.forEach {
+        println it.name
+        implementation(project(it.name))
+    }
+}
+
+// =========================================================
+//                        Tasks
+// =========================================================
+
+build {
+    enabled = false
+}
+
+jar {
+    archiveBaseName.set("DIY-Toml-all")
+    finalizedBy shadowJar
+}
+
+shadowJar {
+    archiveBaseName.set("DIY-Toml-all")
+}
+
+// =========================================================
+//                Subproject Predefines
+// =========================================================
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'org.jetbrains.kotlin.jvm'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+        compileOnly "io.arrow-kt:arrow-core:${rootProject.properties["arrow_version"]}"
+    }
+
+    jar {
+        archiveBaseName.set("DIY-Toml-${project.name}")
+        finalizedBy shadowJar
+    }
+
+    shadowJar {
+        archiveBaseName.set("DIY-Toml-${project.name}")
+    }
+}
