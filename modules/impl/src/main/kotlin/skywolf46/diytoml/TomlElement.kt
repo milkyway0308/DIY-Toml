@@ -1,4 +1,4 @@
-package skywolf46.diytoml.impl
+package skywolf46.diytoml
 
 import java.time.LocalDate
 import java.time.LocalDateTime
