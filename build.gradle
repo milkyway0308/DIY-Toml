@@ -1,6 +1,7 @@
 // =========================================================
 //                         Plugins
 // =========================================================
+
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
@@ -10,6 +11,7 @@ plugins {
 // =========================================================
 //                      Project Setup
 // =========================================================
+
 group = "skywolf46"
 version = rootProject.properties["version"]
 
@@ -60,7 +62,6 @@ subprojects {
 
     dependencies {
         compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-        compileOnly "io.arrow-kt:arrow-core:${rootProject.properties["arrow_version"]}"
     }
 
     jar {
