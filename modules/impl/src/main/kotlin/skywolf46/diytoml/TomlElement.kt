@@ -91,8 +91,9 @@ sealed interface TomlElement<ORIGIN : Any> {
         }
     }
 
-    data class Array<T : TomlElement<*>>(private val origin: kotlin.Array<T>) : TomlElement<kotlin.Array<T>> {
-        override fun asKotlinObject(): kotlin.Array<T> {
+    class Array<T : TomlElement<*>>(origin: List<T>) : TomlElement<List<T>> {
+        private val origin = ArrayList(origin)
+        override fun asKotlinObject(): List<T> {
             return origin
         }
 
@@ -100,17 +101,8 @@ sealed interface TomlElement<ORIGIN : Any> {
             return "[${origin.joinToString(", ") { it.toString() }}]"
         }
 
-        override fun equals(other: Any?): kotlin.Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Array<*>
-
-            return origin.contentEquals(other.origin)
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return origin.contentHashCode()
+        fun addValue(data: T) {
+            origin.add(data)
         }
     }
 
