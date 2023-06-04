@@ -73,7 +73,7 @@ sealed interface TomlElementEncoder<FROM : Any, TO : TomlElement<*>> : Converter
         ): Either<Throwable, TomlElement.Array<*>> {
             return TomlElement.Array(from.map { target ->
                 container.convertRecursive(target!!).getOrElse { return it.left() }
-            }.toTypedArray()).right()
+            }).right()
         }
     }
 
