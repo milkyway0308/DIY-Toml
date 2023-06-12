@@ -29,11 +29,11 @@ class TableInfoConsumer : ContextConsumer<TomlElement.TableInfo>() {
                 }
 
                 ParseStage.READ_CONTENTS -> {
-                    return readTableContents(current)
+                    return readTableContents(false, current)
                 }
 
                 ParseStage.READ_ARRAY_CONTENTS -> {
-                    return readArrayTableContents(current)
+                    return readTableContents(true, current)
                 }
             }
         }
@@ -50,25 +50,10 @@ class TableInfoConsumer : ContextConsumer<TomlElement.TableInfo>() {
         }
     }
 
-    private fun readTableContents(current: TomlContext.IndexedString): Either<Throwable, TomlElement.TableInfo> {
-        val builder = StringBuilder()
-        while (!current.isEndOfLine()) {
-            val data = current.consume()
-            if (data == ']') {
-                if (!current.isEndOfLine()) {
-                    throw IllegalStateException("Something is after table end")
-                }
-                return TomlElement.TableInfo(false, builder.toString()).right()
-            }
-            if (data !in tableParameter) {
-                throw IllegalStateException("Illegal character found : $data")
-            }
-            builder.append(data)
-        }
-        return Exception("Unexpected end of line").left()
-    }
-
-    private fun readArrayTableContents(current: TomlContext.IndexedString): Either<Throwable, TomlElement.TableInfo> {
+    private fun readTableContents(
+        isArray: Boolean,
+        current: TomlContext.IndexedString
+    ): Either<Throwable, TomlElement.TableInfo> {
         val builder = StringBuilder()
         var isDotted = false
         while (!current.isEndOfLine()) {
@@ -77,11 +62,10 @@ class TableInfoConsumer : ContextConsumer<TomlElement.TableInfo>() {
                 if (isDotted) {
                     throw IllegalStateException("Dot must have to place before some text")
                 }
-                if (current.isEndOfLine()) {
-                    throw IllegalStateException("Table is not ended")
-                }
-                if (current.consume() != ']') {
-                    throw IllegalStateException("Array table name not closed")
+                if (isArray) {
+                    if (current.isEndOfLine() || current.consume() != ']') {
+                        throw IllegalStateException("Array table name not closed")
+                    }
                 }
                 if (!current.isEndOfLine()) {
                     throw IllegalStateException("Something is after table end")
@@ -89,7 +73,7 @@ class TableInfoConsumer : ContextConsumer<TomlElement.TableInfo>() {
                 if (builder.isEmpty()) {
                     throw IllegalStateException("Empty table key not allowed when it's not quoted")
                 }
-                return TomlElement.TableInfo(true, builder.toString()).right()
+                return TomlElement.TableInfo(isArray, builder.toString()).right()
             }
             isDotted = checkDotted(data, isDotted, current, builder)
         }
