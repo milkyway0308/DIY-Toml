@@ -14,8 +14,26 @@ class TomlContext(inputStream: InputStream, private val container: ConverterCont
     private val currentContext = mutableMapOf<String, EitherNel<TomlElement.Table<*>, TomlElement.Table<*>>>()
     private var currentLine: IndexedString? = null
 
-    fun read(): Either<Throwable, Any> {
-        return TableConsumer().consume(this)
+    fun read(): Either<Throwable, TomlElement.Table<*>> {
+        while (current().isSome()) {
+            TableConsumer().consume(this)
+                .onLeft { return it.left() }
+                .onRight {
+                    Either.catch {
+                        if (it.tableInfo.isArray)
+                            addValue(it.tableInfo.tableName, it)
+                        else
+                            setValue(it.tableInfo.tableName, it)
+                    }.onLeft { return it.left() }
+                }
+        }
+        return TomlElement.Table(currentContext.mapValues { entry ->
+            entry.value.fold({
+                TomlElement.Array(it)
+            }, {
+                it
+            })
+        }).right()
     }
 
     fun current(): Option<IndexedString> {
@@ -44,7 +62,7 @@ class TomlContext(inputStream: InputStream, private val container: ConverterCont
         currentContext[key] = value.right()
     }
 
-    internal fun addValue(key: String, value: TomlElement.Table<*>) {
+    private fun addValue(key: String, value: TomlElement.Table<*>) {
         val parsed = currentContext[key]
         if (parsed == null) {
             currentContext[key] = value.leftNel()
@@ -100,6 +118,48 @@ class TomlContext(inputStream: InputStream, private val container: ConverterCont
             }
             return false
         }
+
+
+        fun consumeIfRange(target: Array<Char>, skipWhitespace: Boolean = false, unit: (Char) -> Unit): Boolean {
+            while (!isEndOfLine()) {
+                val next = consume()
+                if (skipWhitespace && (next == ' ' || next == '\t'))
+                    continue
+                if (next !in target) {
+                    return false
+                }
+                unit(next)
+            }
+            return true
+        }
+
+
+        fun consumeAllUntil(
+            target: Char,
+            skipWhitespace: Boolean = false,
+        ): Either<Exception, String> {
+            val builder = StringBuilder()
+            if (!consumeUntil(target, skipWhitespace) {
+                    builder.append(it)
+                }) {
+                return Exception().left()
+            }
+            return builder.toString().right()
+        }
+
+        fun consumeAllIfRange(
+            target: Array<Char>,
+            skipWhitespace: Boolean = false,
+        ): Either<Exception, String> {
+            val builder = StringBuilder()
+            if (!consumeIfRange(target, skipWhitespace) {
+                    builder.append(it)
+                }) {
+                return Exception().left()
+            }
+            return builder.toString().right()
+        }
+
 
         fun consumeAll(): String {
             return target.substring(index, target.length).apply {
