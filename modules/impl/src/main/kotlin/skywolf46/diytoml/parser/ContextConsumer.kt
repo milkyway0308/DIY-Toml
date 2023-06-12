@@ -4,9 +4,10 @@ import arrow.core.Either
 import arrow.core.Option
 import arrow.core.getOrElse
 import arrow.core.toOption
+import skywolf46.diytoml.TomlElement
 
 
-abstract class ContextConsumer<T : Any> {
+abstract class ContextConsumer<T : TomlElement<*>> {
     private val registry = mutableListOf<ContextConsumer<*>>()
 
     open fun getAllowedStartingChars(): Array<Char> {
@@ -37,11 +38,19 @@ abstract class ContextConsumer<T : Any> {
 
 
     fun findConsumer(context: TomlContext): Option<ContextConsumer<*>> {
-        return registry.find { it.isCompatible(context) }.toOption()
+        println("Consumers: ${registry}")
+        return registry.find { it.isCompatible(context).apply {
+            if(!this) {
+                println("Incompatible at ${it.javaClass.name}")
+            } else {
+                println("Compatible at ${it.javaClass.name}")
+            }
+        } }.toOption()
     }
 
     fun registerConsumer(consumer: ContextConsumer<*>): ContextConsumer<T> {
         registry += consumer
+        registry.sortWith(Comparator.comparingInt { it.getPriority() })
         return this
     }
 }
