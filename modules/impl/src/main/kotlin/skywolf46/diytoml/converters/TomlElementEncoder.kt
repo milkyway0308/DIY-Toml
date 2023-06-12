@@ -21,9 +21,9 @@ sealed interface TomlElementEncoder<FROM : Any, TO : TomlElement<*>> : Converter
         }
     }
 
-    object Int : TomlElementEncoder<kotlin.Int, TomlElement.Int> {
-        override fun convert(container: ConverterContainer, from: kotlin.Int): Either<Throwable, TomlElement.Int> {
-            return TomlElement.Int(from).right()
+    object Long : TomlElementEncoder<kotlin.Long, TomlElement.Long> {
+        override fun convert(container: ConverterContainer, from: kotlin.Long): Either<Throwable, TomlElement.Long> {
+            return TomlElement.Long(from).right()
         }
     }
 

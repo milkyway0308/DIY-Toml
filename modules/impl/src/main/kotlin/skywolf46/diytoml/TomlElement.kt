@@ -30,8 +30,8 @@ sealed interface TomlElement<ORIGIN : Any> {
         }
     }
 
-    data class Int(private val origin: kotlin.Int) : TomlElement<kotlin.Int> {
-        override fun asKotlinObject(): kotlin.Int {
+    data class Long(private val origin: kotlin.Long) : TomlElement<kotlin.Long> {
+        override fun asKotlinObject(): kotlin.Long {
             return origin
         }
 
@@ -106,7 +106,8 @@ sealed interface TomlElement<ORIGIN : Any> {
         }
     }
 
-    data class Table<T : TomlElement<*>>(private val origin: Map<kotlin.String, T>) :
+
+    open class Table<T : TomlElement<*>>(private val origin: Map<kotlin.String, T>) :
         TomlElement<Map<kotlin.String, T>> {
         override fun asKotlinObject(): Map<kotlin.String, T> {
             return origin
@@ -115,6 +116,26 @@ sealed interface TomlElement<ORIGIN : Any> {
         override fun toString(): kotlin.String {
             return "{${origin.entries.joinToString(",") { "${it.key}: ${it.value}" }}}"
         }
+    }
+
+    class ConstructedTable<T : TomlElement<*>>(val tableInfo: TableInfo, origin: Map<kotlin.String, T>) :
+        Table<T>(origin)
+
+    data class Row(val rowName: kotlin.String, val rowValue: TomlElement<*>) : TomlElement<TomlElement<*>> {
+        override fun asKotlinObject(): TomlElement<*> {
+            return this
+        }
+
+        override fun toString(): kotlin.String {
+            return "${rowName}: $rowValue"
+        }
+    }
+
+    data class TableInfo(val isArray: kotlin.Boolean, val tableName: kotlin.String) : TomlElement<kotlin.String> {
+        override fun asKotlinObject(): kotlin.String {
+            return tableName
+        }
+
     }
 
 }
