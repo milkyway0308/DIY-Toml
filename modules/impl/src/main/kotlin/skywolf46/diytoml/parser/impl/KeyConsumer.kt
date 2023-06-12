@@ -1,14 +1,14 @@
 package skywolf46.diytoml.parser.impl
 
 import arrow.core.Either
-import arrow.core.Option
 import arrow.core.getOrElse
 import arrow.core.right
+import skywolf46.diytoml.TomlElement
 import skywolf46.diytoml.parser.ContextConsumer
 import skywolf46.diytoml.parser.TomlContext
 
-class KeyConsumer : ContextConsumer<String>() {
-    override fun consume(tomlContext: TomlContext): Either<Throwable, String> {
+class KeyConsumer : ContextConsumer<TomlElement.String>() {
+    override fun consume(tomlContext: TomlContext): Either<Throwable, TomlElement.String> {
         val keyBuilder = StringBuilder()
         val current = tomlContext.current().getOrElse { throw IllegalStateException("wtf") }
         current.mark()
@@ -20,7 +20,7 @@ class KeyConsumer : ContextConsumer<String>() {
                             throw IllegalStateException("No value after key")
                         } != '=')
                         throw IllegalStateException("Unexpected token after key name")
-                }.right()
+                }.run { TomlElement.String(this) }.right()
             }
             else -> {
                 current.reset()
@@ -31,7 +31,7 @@ class KeyConsumer : ContextConsumer<String>() {
                 }
                 println("Left char: ${current.peekAll()}")
                 println("Read ${keyBuilder}")
-                return keyBuilder.toString().right()
+                return TomlElement.String(keyBuilder.toString()).right()
             }
         }
 
