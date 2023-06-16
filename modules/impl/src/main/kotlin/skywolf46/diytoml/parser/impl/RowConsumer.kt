@@ -6,12 +6,14 @@ import arrow.core.right
 import skywolf46.diytoml.TomlElement
 import skywolf46.diytoml.parser.ContextConsumer
 import skywolf46.diytoml.parser.TomlContext
+import skywolf46.diytoml.parser.impl.elements.FloatConsumer
 import skywolf46.diytoml.parser.impl.elements.NumberConsumer
 import skywolf46.diytoml.parser.impl.elements.StringConsumer
 
 class RowConsumer : ContextConsumer<TomlElement.Row>() {
     init {
         registerConsumer(StringConsumer())
+        registerConsumer(FloatConsumer())
         registerConsumer(NumberConsumer())
     }
 
