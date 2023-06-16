@@ -18,7 +18,7 @@ abstract class ContextConsumer<T : TomlElement<*>> {
         return 0
     }
 
-    fun isCompatible(tomlContext: TomlContext): Boolean {
+    private fun isCompatible(tomlContext: TomlContext): Boolean {
         val current = tomlContext.current().getOrElse { throw IllegalStateException("Unexpected EOL at delimiter") }
         if (current.isEndOfLine())
             throw IllegalStateException("Unexpected EOL at delimiter")
@@ -27,7 +27,10 @@ abstract class ContextConsumer<T : TomlElement<*>> {
             throw IllegalStateException("Unexpected EOL at delimiter")
         } in getAllowedStartingChars()).apply {
             current.reset()
-        } && checkCompatible(tomlContext)
+        } && current.withMarkPosition {
+            current.markLast()
+            checkCompatible(tomlContext)
+        }
     }
 
     protected open fun checkCompatible(tomlContext: TomlContext): Boolean {
