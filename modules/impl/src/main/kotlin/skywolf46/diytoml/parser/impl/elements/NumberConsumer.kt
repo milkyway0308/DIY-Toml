@@ -45,4 +45,8 @@ class NumberConsumer : ContextConsumer<TomlElement.Long>() {
     override fun getPriority(): Int {
         return 500
     }
+
+    override fun checkCompatible(tomlContext: TomlContext): Boolean {
+        return consume(tomlContext).isRight()
+    }
 }
