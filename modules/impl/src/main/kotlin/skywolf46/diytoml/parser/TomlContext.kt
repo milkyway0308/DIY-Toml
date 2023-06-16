@@ -88,7 +88,7 @@ class TomlContext(inputStream: InputStream, private val container: ConverterCont
     class IndexedString(target: String) {
         val target = filterComment(target).getOrElse { "" }
         private var index = 0
-        private var flag = 0
+        private var flagIndex = mutableListOf(0)
 
         fun consume(): Char {
             return target[index++]
@@ -173,11 +173,44 @@ class TomlContext(inputStream: InputStream, private val container: ConverterCont
         }
 
         fun mark() {
-            flag = index
+            flagIndex[0] = index
         }
 
         fun reset() {
-            index = flag
+            index = flagIndex[0]
+        }
+
+        fun markLast() {
+            flagIndex[flagIndex.size - 1] = index
+        }
+
+        fun resetLast() {
+            index = flagIndex[flagIndex.size - 1]
+        }
+
+        fun addMarkPosition() {
+            flagIndex.add(0)
+        }
+
+        fun <T : Any> withMarkPosition(unit: () -> T): T {
+            addMarkPosition()
+            markLast()
+            return unit().apply {
+                resetLast()
+                removeMarkPosition()
+            }
+        }
+
+        fun removeMarkPosition() {
+            flagIndex.removeAt(flagIndex.size - 1)
+        }
+
+        fun markAt(index: Int) {
+            flagIndex[index] = this.index
+        }
+
+        fun resetAt(index: Int) {
+            this.index = flagIndex[index]
         }
 
         fun isEndOfLine(): Boolean {
