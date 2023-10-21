@@ -15,38 +15,57 @@ class FloatConsumer : ContextConsumer<TomlElement.Float>() {
         return collect(arrayOf('-', '+'), '0'..'9')
     }
 
-    override fun consume(tomlContext: TomlContext): Either<Throwable, TomlElement.Float> {
-        return parseNumber(tomlContext.current().getOrElse { return Exception("Unexpected end of line").left() }).map { TomlElement.Float(it) }
+    override fun consume(tomlContext: TomlContext, endChar: Array<Char>): Either<Throwable, TomlElement.Float> {
+        return parseNumber(
+            tomlContext.current().getOrElse { return Exception("Unexpected end of line").left() },
+            endChar
+        ).map { TomlElement.Float(it) }
     }
 
-    private fun parseNumber(current: TomlContext.IndexedString): Either<Throwable, Float> {
+    private fun parseNumber(current: TomlContext.IndexedString, endChar: Array<Char>): Either<Throwable, Float> {
         current.mark()
-        return Either.catch {
-            when (current.consume()) {
-                '-' -> {
-                    current.consumeAllIfRange(targetChars, true)
-                        .getOrElse { return Exception().left() }.toFloat()
-                }
-                '+' -> {
-                    current.consumeAllIfRange(targetChars, true)
-                        .getOrElse { return Exception().left() }.toFloat()
-                }
-                else -> {
-                    current.reset()
-                    current.consumeAllIfRange(targetChars, true)
-                        .getOrElse { return Exception().left() }.toFloat()
-                }
+        return when (current.consume()) {
+            '-' -> {
+                current.parseFloat(endChar).map { -it }
             }
+
+            '+' -> {
+                current.parseFloat(endChar)
+            }
+
+            else -> {
+                current.reset()
+                current.parseFloat(endChar)
+            }
+        }
+
+    }
+
+    private fun TomlContext.IndexedString.parseFloat(endChar: Array<Char>): Either<Throwable, Float> {
+        val builder = StringBuilder()
+        consumeAllIfRange(emptyArray(), true)
+        while (!isEndOfLine()) {
+            mark()
+            val next = consume()
+            if (next in endChar) {
+                reset()
+                break
+            }
+            if (next !in targetChars)
+                return IllegalStateException("Unexpected character '$next' in float").left()
+            builder.append(next)
+        }
+        return Either.catch {
+            builder.toString().toFloat()
         }
     }
 
-    override fun checkCompatible(tomlContext: TomlContext): Boolean {
-        return parseNumber(tomlContext.current().getOrElse { return false }).isRight()
+    override fun checkCompatible(tomlContext: TomlContext, endChar: Array<Char>): Boolean {
+        return parseNumber(tomlContext.current().getOrElse { return false }, endChar).isRight()
     }
 
 
     override fun getPriority(): Int {
         return 1000
     }
-
 }

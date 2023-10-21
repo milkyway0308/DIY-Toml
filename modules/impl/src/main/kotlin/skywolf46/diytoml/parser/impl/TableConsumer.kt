@@ -10,8 +10,8 @@ import skywolf46.diytoml.parser.TomlContext
 
 class TableConsumer : ContextConsumer<TomlElement.ConstructedTable<*>>() {
 
-    override fun consume(tomlContext: TomlContext): Either<Throwable, TomlElement.ConstructedTable<*>> {
-        val info = TableInfoConsumer().consume(tomlContext).getOrElse { return it.left() }
+    override fun consume(tomlContext: TomlContext, endChar: Array<Char>): Either<Throwable, TomlElement.ConstructedTable<*>> {
+        val info = TableInfoConsumer().consume(tomlContext,).getOrElse { return it.left() }
         val dataList = mutableMapOf<String, TomlElement<*>>()
         while (tomlContext.current().isSome()) {
             val current = tomlContext.current().getOrElse { return Exception("Impossible operation occurred").left() }
@@ -21,12 +21,13 @@ class TableConsumer : ContextConsumer<TomlElement.ConstructedTable<*>>() {
                 break
             }
             current.reset()
-            val data = RowConsumer().consume(tomlContext)
+            val data = RowConsumer().consume(tomlContext,)
             if (data.isLeft()) {
                 break
             }
             data.onRight {
-                val name = "${info.tableName}.${it.rowName}"
+//                val name = "${info.tableName}.${it.rowName}"
+                val name = it.rowName
                 if (name in dataList) {
                     return Exception().left()
                 }

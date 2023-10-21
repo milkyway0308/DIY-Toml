@@ -1,18 +1,28 @@
 package skywolf46.diytoml.parser
 
 import arrow.core.*
+import skywolf46.diytoml.DataProvider
+import skywolf46.diytoml.StringListProvider
 import skywolf46.diytoml.TomlElement
 import skywolf46.diytoml.api.ConverterContainer
 import skywolf46.diytoml.parser.impl.TableConsumer
 import java.io.BufferedReader
-import java.io.InputStream
+import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 import kotlin.reflect.KClass
 
-class TomlContext(inputStream: InputStream, private val container: ConverterContainer) : AutoCloseable {
-    private val dataStream = BufferedReader(InputStreamReader(inputStream))
+class TomlContext(private val provider: DataProvider, val container: ConverterContainer) : AutoCloseable {
+    companion object {
+        fun single(data: String, container: ConverterContainer): TomlContext {
+            return TomlContext(StringListProvider(emptyList<String>().iterator()), container).apply {
+                currentLine = data.asIndexed()
+            }
+        }
+    }
+
     private val currentContext = mutableMapOf<String, EitherNel<TomlElement.Table<*>, TomlElement.Table<*>>>()
     private var currentLine: IndexedString? = null
+
 
     fun read(): Either<Throwable, TomlElement.Table<*>> {
         while (current().isSome()) {
@@ -36,16 +46,17 @@ class TomlContext(inputStream: InputStream, private val container: ConverterCont
         }).right()
     }
 
-    fun current(): Option<IndexedString> {
-        if (currentLine == null || currentLine?.isEndOfLine() == true) {
-            println("Next line!")
+    fun current(processNextLine: Boolean = true): Option<IndexedString> {
+        if (processNextLine && (currentLine == null || currentLine?.isEndOfLine() == true)) {
             return parseNextLine().apply { currentLine = this }?.run { if (isEndOfLine()) null else this }.toOption()
         }
         return currentLine.toOption()
     }
 
     private tailrec fun parseNextLine(): IndexedString? {
-        val data = dataStream.readLine()?.asIndexed() ?: run {
+        val data = if (provider.hasMoreContents()) {
+            provider.provide().asIndexed()
+        } else {
             return null
         }
         return if (data.isEndOfLine()) {
@@ -82,7 +93,7 @@ class TomlContext(inputStream: InputStream, private val container: ConverterCont
     }
 
     override fun close() {
-        dataStream.close()
+        provider.clean()
     }
 
     class IndexedString(target: String) {
@@ -126,6 +137,7 @@ class TomlContext(inputStream: InputStream, private val container: ConverterCont
                 if (skipWhitespace && (next == ' ' || next == '\t'))
                     continue
                 if (next !in target) {
+                    index--
                     return false
                 }
                 unit(next)
@@ -168,7 +180,6 @@ class TomlContext(inputStream: InputStream, private val container: ConverterCont
         }
 
         fun peekAll(): String {
-            println("Peek from index ${index}")
             return target.substring(index, target.length)
         }
 

@@ -10,30 +10,42 @@ import skywolf46.diytoml.util.collect
 
 class NumberConsumer : ContextConsumer<TomlElement.Long>() {
     private val targetChars = collect(arrayOf('e', '.'), '0'..'9')
-    override fun consume(tomlContext: TomlContext): Either<Throwable, TomlElement.Long> {
+    override fun consume(tomlContext: TomlContext, endChar: Array<Char>): Either<Throwable, TomlElement.Long> {
         val current = tomlContext.current().getOrElse { return IllegalStateException().left() }
         current.mark()
         return when (current.consume()) {
             '-' -> {
-                parseNumber(current).map { -it }
+                current.parseNumber(endChar)
             }
 
             '+' -> {
-                parseNumber(current)
+                current.parseNumber(endChar)
             }
 
             else -> {
                 current.reset()
-                parseNumber(current)
+                current.parseNumber(endChar)
             }
         }.map { TomlElement.Long(it) }
     }
 
-    private fun parseNumber(current: TomlContext.IndexedString): Either<Throwable, Long> {
-        return try {
-            current.consumeAllIfRange(targetChars, true).apply { println(this) }.map { it.toLong() }
-        } catch (e: Exception) {
-            e.left()
+
+    private fun TomlContext.IndexedString.parseNumber(endChar: Array<Char>): Either<Throwable, Long> {
+        val builder = StringBuilder()
+        consumeAllIfRange(emptyArray(), true)
+        while (!isEndOfLine()) {
+            mark()
+            val next = consume()
+            if (next in endChar) {
+                reset()
+                break
+            }
+            if (next !in targetChars)
+                return IllegalStateException("Unexpected character '$next' in long").left()
+            builder.append(next)
+        }
+        return Either.catch {
+            builder.toString().toLong()
         }
     }
 
@@ -46,7 +58,7 @@ class NumberConsumer : ContextConsumer<TomlElement.Long>() {
         return 500
     }
 
-    override fun checkCompatible(tomlContext: TomlContext): Boolean {
-        return consume(tomlContext).isRight()
+    override fun checkCompatible(tomlContext: TomlContext, endChar: Array<Char>): Boolean {
+        return consume(tomlContext, endChar).isRight()
     }
 }

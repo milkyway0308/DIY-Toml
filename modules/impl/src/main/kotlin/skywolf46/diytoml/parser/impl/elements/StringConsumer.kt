@@ -8,7 +8,7 @@ import skywolf46.diytoml.parser.ContextConsumer
 import skywolf46.diytoml.parser.TomlContext
 
 class StringConsumer : ContextConsumer<TomlElement.String>() {
-    override fun consume(tomlContext: TomlContext): Either<Throwable, TomlElement.String> {
+    override fun consume(tomlContext: TomlContext, endChar: Array<Char>): Either<Throwable, TomlElement.String> {
         val data = tomlContext.current().getOrElse { throw IllegalStateException("Unexpected string EOL") }
         val builder = StringBuilder()
         data.consume()

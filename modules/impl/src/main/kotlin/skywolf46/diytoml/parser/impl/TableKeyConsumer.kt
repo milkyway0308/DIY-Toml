@@ -7,8 +7,8 @@ import skywolf46.diytoml.TomlElement
 import skywolf46.diytoml.parser.ContextConsumer
 import skywolf46.diytoml.parser.TomlContext
 
-class KeyConsumer : ContextConsumer<TomlElement.String>() {
-    override fun consume(tomlContext: TomlContext): Either<Throwable, TomlElement.String> {
+class TableKeyConsumer : ContextConsumer<TomlElement.String>() {
+    override fun consume(tomlContext: TomlContext, endChar: Array<Char>): Either<Throwable, TomlElement.String> {
         val keyBuilder = StringBuilder()
         val current = tomlContext.current().getOrElse { throw IllegalStateException("wtf") }
         current.mark()
@@ -22,15 +22,31 @@ class KeyConsumer : ContextConsumer<TomlElement.String>() {
                         throw IllegalStateException("Unexpected token after key name")
                 }.run { TomlElement.String(this) }.right()
             }
+
             else -> {
                 current.reset()
-                if (!current.consumeUntil('=', true) {
-                        keyBuilder.append(it)
-                    }) {
-                    throw IllegalStateException("Row key net ended")
+                while (!current.isEndOfLine()) {
+                    current.mark()
+                    val next = current.consume()
+                    if (next != ' ' && next != '\t') {
+                        current.reset()
+                        break
+                    }
                 }
-                println("Left char: ${current.peekAll()}")
-                println("Read ${keyBuilder}")
+                var isWhitespaceMarked = false
+                while (!current.isEndOfLine()) {
+                    when (val next = current.consume()) {
+                        ' ', '\t' -> isWhitespaceMarked = true
+                        '=' -> break
+                        else -> {
+                            if (isWhitespaceMarked)
+                                throw IllegalStateException("Row key cannot contain whitespace when not quoted")
+                            keyBuilder.append(next)
+                        }
+                    }
+                }
+                if (current.isEndOfLine())
+                    throw IllegalStateException("Row key net ended")
                 return TomlElement.String(keyBuilder.toString()).right()
             }
         }

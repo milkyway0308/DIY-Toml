@@ -18,7 +18,7 @@ abstract class ContextConsumer<T : TomlElement<*>> {
         return 0
     }
 
-    private fun isCompatible(tomlContext: TomlContext): Boolean {
+    private fun isCompatible(tomlContext: TomlContext, endChar: Array<Char>): Boolean {
         val current = tomlContext.current().getOrElse { throw IllegalStateException("Unexpected EOL at delimiter") }
         if (current.isEndOfLine())
             throw IllegalStateException("Unexpected EOL at delimiter")
@@ -29,26 +29,19 @@ abstract class ContextConsumer<T : TomlElement<*>> {
             current.reset()
         } && current.withMarkPosition {
             current.markLast()
-            checkCompatible(tomlContext)
+            checkCompatible(tomlContext, endChar)
         }
     }
 
-    protected open fun checkCompatible(tomlContext: TomlContext): Boolean {
+    protected open fun checkCompatible(tomlContext: TomlContext, endChar: Array<Char>): Boolean {
         return true
     }
 
-    abstract fun consume(tomlContext: TomlContext): Either<Throwable, T>
+    abstract fun consume(tomlContext: TomlContext, endChar: Array<Char> = emptyArray()): Either<Throwable, T>
 
 
-    fun findConsumer(context: TomlContext): Option<ContextConsumer<*>> {
-        println("Consumers: ${registry}")
-        return registry.find { it.isCompatible(context).apply {
-            if(!this) {
-                println("Incompatible at ${it.javaClass.name}")
-            } else {
-                println("Compatible at ${it.javaClass.name}")
-            }
-        } }.toOption()
+    fun findConsumer(context: TomlContext, endChar: Array<Char> = emptyArray()): Option<ContextConsumer<*>> {
+        return registry.find { it.isCompatible(context, endChar) }.toOption()
     }
 
     fun registerConsumer(consumer: ContextConsumer<*>): ContextConsumer<T> {

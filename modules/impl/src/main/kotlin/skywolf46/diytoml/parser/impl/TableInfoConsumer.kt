@@ -13,7 +13,7 @@ class TableInfoConsumer : ContextConsumer<TomlElement.TableInfo>() {
     //A-Za-z0-9_-
     private val tableParameter = collect(arrayOf('_', '-'), 'A'..'Z', 'a'..'z', '0'..'9')
 
-    override fun consume(tomlContext: TomlContext): Either<Throwable, TomlElement.TableInfo> {
+    override fun consume(tomlContext: TomlContext, endChar: Array<Char>): Either<Throwable, TomlElement.TableInfo> {
         val current = tomlContext.current().getOrElse { throw IllegalStateException() }
         current.mark()
         if (current.consume() != '[') return Exception("Table name not starts with '['").left()

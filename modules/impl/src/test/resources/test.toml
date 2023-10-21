@@ -1,0 +1,21 @@
+# This is comment,
+# Thus, this have not to be parsed.
+[[a."In-Command #"]] # Halo
+test2 = 42111
+hello_world = "Test"   # Hello this is comment
+[[a."In-Command #"]] # Halo
+test2 = 42111
+test5 = 332.93
+Hello_World = "Test"
+test_map = { map_test = 1, map_test2 = 2, test2 = "test", map_test3 = 3, nested_map_test = { test3 = "Test" } }
+test_array = [
+    "test1"
+    ,"test2"
+]
+
+A = [
+    "test"
+
+
+    ,
+]
